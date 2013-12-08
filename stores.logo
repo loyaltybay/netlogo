@@ -2,38 +2,67 @@ extensions[table]
 
 patches-own [
   name
+  is-loyaltybay?
   transition-prob
   is-entrance?
   is-exit?
   is-results?
 ]
 
-globals [
-  n-shop-rows
+turtles-own [
+ already-told? 
+]
+
+globals [ 
   shop-entrances
-  shop-results
-  shop-exits
+  lb-shop-entrances
+  non-lb-shop-entrances
+  n-shop-rows
   impressions-non-lb
   searches-non-lb
   conversions-non-lb
   impressions-lb
   searches-lb
   conversions-lb
-
  ]
+
 
 to init
   set shop-entrances []
-  set shop-results []
-  set shop-exits[]
-  set n-shop-rows 0
+  set lb-shop-entrances []
+  set non-lb-shop-entrances []
 end
+
+to-report conversion-rate-non-lb
+  ifelse(impressions-non-lb = 0) [report 0] [ report (conversions-non-lb / impressions-non-lb)]
+end
+
+to-report conversion-rate-lb
+  ifelse(impressions-lb = 0) [report 0] [ report (conversions-lb / impressions-lb)]
+end
+
+to-report n-lb-shops
+  report count patches with [is-loyaltybay? = true]
+end
+
+to-report n-non-lb-shops
+  report count patches with [is-loyaltybay? = false]  
+end
+
+to-report lb-conversions-per-shop
+  report conversions-lb / n-lb-shops
+end
+
+to-report non-lb-conversions-per-shop
+  report conversions-non-lb / n-non-lb-shops
+end
+
 
 to setup  
   clear-all
   init
-  create-turtles 10 [ 
-    setxy 1 1 
+  create-turtles n-turtles [ 
+    home
     set color 2
    ]
   ask turtles [home]
@@ -43,11 +72,11 @@ to setup
   reset-ticks
 end
 
+
 to setup-shops[num-stores loyaltybay?]
   set n-shop-rows (n-shop-rows + 1)
   
   foreach n-values num-stores [?] [
-    
  
     let x-base ? * 2
     let y-base (10 * n-shop-rows)
@@ -55,68 +84,94 @@ to setup-shops[num-stores loyaltybay?]
 
     let shop-entrance patch x-base y-base
     ask shop-entrance[
-      ifelse(loyaltybay?)[set transition-prob 0.2][ set transition-prob 0.22]
+      set is-loyaltybay? loyaltybay?
+      ifelse(loyaltybay?)[set transition-prob lb-entrance-transit-prob][ set transition-prob non-lb-entrance-transit-prob]
       set name "shop-entrance"
-      set pcolor red
+      ifelse(loyaltybay?)[set pcolor 65][set pcolor red]
       set is-entrance? true
     ]
-    ;;show "shop-entrance"
-    ;;show shop-entrances
-    ;;show shop-entrance
+
     set shop-entrances (lput shop-entrance shop-entrances)
-
-
-    ;;show "shop result"    
+    
+    ifelse(loyaltybay?) 
+    [set lb-shop-entrances (lput shop-entrance lb-shop-entrances)]
+    [set non-lb-shop-entrances (lput shop-entrance non-lb-shop-entrances)]    
+    
     let shop-result patch x-base (y-base + 1)
     ask shop-result[
-      ifelse(loyaltybay?)[set transition-prob 0.05][ set transition-prob 0.055]
+      set is-loyaltybay? loyaltybay?
+      ifelse(loyaltybay?)[set transition-prob lb-results-transit-prob][ set transition-prob non-lb-results-transit-prob]
       set name "shop-result"
-      set pcolor yellow
+      ifelse(loyaltybay?)[set pcolor 75][set pcolor yellow]
       set is-results? true  
     ]
-    set shop-results lput shop-result shop-results
+   
 
     ;;show "shop exit"    
     let shop-exit patch x-base (y-base + 2)
     ask shop-exit[
+      set is-loyaltybay? loyaltybay?
       set transition-prob 1
-      set pcolor green
+      ifelse(loyaltybay?)[set pcolor 85][set pcolor green]
       set name "shop-exit"
       set is-exit? true  
     ]
-    
-    set shop-exits lput shop-exit shop-exits
-    
   ]
   
 end
 
 to record
-  if([is-entrance?] of patch-here = true) [ set impressions-non-lb impressions-non-lb + 1]
-  if([is-results?] of patch-here = true) [ set searches-non-lb searches-non-lb + 1]
-  if([is-exit?] of patch-here = true) [ set conversions-non-lb conversions-non-lb + 1]
+
+  if(is-loyaltybay? = false)[
+    if([is-entrance?] of patch-here = true) [ set impressions-non-lb impressions-non-lb + 1]
+    if([is-results?] of patch-here = true) [ set searches-non-lb searches-non-lb + 1]
+    if([is-exit?] of patch-here = true) [ set conversions-non-lb conversions-non-lb + 1]
+  ]
+  
+  if(is-loyaltybay? = true)[
+    if([is-entrance?] of patch-here = true) [ set impressions-lb impressions-lb + 1]
+    if([is-results?] of patch-here = true) [ set searches-lb searches-lb + 1]
+    if([is-exit?] of patch-here = true) [ set conversions-lb conversions-lb + 1]
+  ]
+end
+
+to spread-the-word
+  if(random-float 1.0 < share-word-prob and [is-loyaltybay?] of patch-here = true)[
+      ask one-of turtles [set already-told? true]   
+  ]
 end
 
 to go
   ask turtles [
-    ;;show word "shop-entrances" shop-entrances
    ifelse(xcor = 0 and ycor = 0) [
-     move-to one-of shop-entrances
+     ifelse(already-told? = true)[
+       ifelse(random-float 1.0 < choose-lb-when-known-prob)
+       [move-to one-of lb-shop-entrances]
+       [move-to one-of shop-entrances]
+       
+     ][
+       move-to one-of shop-entrances     
+     ]
+     
      facexy xcor max-pycor
      record
    ] 
    [ifelse([transition-prob] of patch-here > (random-float 1.0)) [
       fd 1
       record
-   ] [home]]
+   ] [
+     spread-the-word
+     home
+
+   ]]
   ]
   tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-281
+425
 10
-751
+895
 501
 -1
 -1
@@ -141,10 +196,10 @@ ticks
 30.0
 
 BUTTON
-13
-44
-79
-77
+10
+20
+76
+53
 NIL
 setup
 NIL
@@ -157,21 +212,11 @@ NIL
 NIL
 1
 
-CHOOSER
-10
-87
-102
-132
-n-stores
-n-stores
-1 2 3 4 5 6 7 8 9 10
-4
-
 BUTTON
-82
-44
-145
-77
+79
+20
+142
+53
 NIL
 go
 T
@@ -184,22 +229,61 @@ NIL
 NIL
 1
 
-CHOOSER
-105
-87
-197
-132
-n-lb-stores
-n-lb-stores
-1 2 3 4 5
+PLOT
+10
+310
+210
+430
+CR
+NIL
+NIL
+0.0
+0.0
+0.0
+0.0
+true
+true
+"" ""
+PENS
+"lb" 1.0 0 -16777216 true "" "plot conversion-rate-lb"
+"non-lb" 1.0 0 -7500403 true "" "plot conversion-rate-non-lb"
+
+SLIDER
+10
+240
+415
+273
+share-word-prob
+share-word-prob
 0
+1
+0.01
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+275
+415
+308
+choose-lb-when-known-prob
+choose-lb-when-known-prob
+0
+1.0
+0.02
+0.01
+1
+NIL
+HORIZONTAL
 
 PLOT
-27
-167
-227
-317
-impressions
+10
+430
+210
+550
+knowledge
 NIL
 NIL
 0.0
@@ -210,7 +294,168 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot impressions-non-lb"
+"default" 1.0 0 -16777216 true "" "plot count turtles with [already-told? = true]"
+
+PLOT
+220
+430
+420
+550
+visits/store
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"lb" 1.0 0 -16777216 true "" "plot impressions-lb / n-lb-shops"
+"non-lb" 1.0 0 -7500403 true "" "plot impressions-non-lb / n-non-lb-shops"
+
+PLOT
+220
+310
+420
+430
+conversions/store
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"lb" 1.0 0 -16777216 true "" "plot lb-conversions-per-shop"
+"non-lb" 1.0 0 -7500403 true "" "plot conversions-non-lb / n-non-lb-shops"
+
+SLIDER
+10
+170
+415
+203
+n-stores
+n-stores
+0
+100
+10
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+205
+415
+238
+n-lb-stores
+n-lb-stores
+0
+100
+1
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+130
+415
+163
+n-turtles
+n-turtles
+1
+100
+100
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+55
+190
+88
+lb-entrance-transit-prob
+lb-entrance-transit-prob
+0
+1
+0.2
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+195
+55
+390
+88
+lb-results-transit-prob
+lb-results-transit-prob
+0
+1
+0.21
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+95
+190
+128
+non-lb-entrance-transit-prob
+non-lb-entrance-transit-prob
+0
+1
+0.2
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+195
+95
+390
+128
+non-lb-results-transit-prob
+non-lb-results-transit-prob
+0
+1
+0.2
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+430
+520
+630
+670
+conversion/store benefit
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -573,5 +818,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
