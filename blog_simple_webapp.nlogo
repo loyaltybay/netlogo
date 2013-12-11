@@ -1,11 +1,75 @@
+breed [paid-users paid-user]
+breed [organic-users organic-user]
+breed [referral-users referral-user]
+
+
+globals[
+ landing-page-xcor
+ landing-page-ycor 
+]
+
+patches-own [
+ is-landing-page?
+ is-search-results-page?
+ is-conversion-page? 
+]
+
+to setup
+  clear-all
+  set landing-page-xcor 10
+  set landing-page-ycor 50  
+  
+  create-paid-users 10 [
+   move-to patch-at 1 10 
+  ]
+  ask patch 1 11 [ set plabel "paid"]
+  
+  create-organic-users 10 [
+   move-to patch-at 10 10 
+  ]  
+  ask patch 10 11 [ set plabel "organic"]
+  
+  create-referral-users 10 [
+   move-to patch-at 20 10 
+  ]
+  ask patch 20 11 [ set plabel "referral"]
+  
+  ;;set up the webapps pages
+  ask patch landing-page-xcor landing-page-ycor [
+    set pcolor red
+    set is-landing-page? true
+  ]
+  ask patch (landing-page-xcor + 5) 50 [set plabel "landing"]
+  
+  ask patch landing-page-xcor (landing-page-ycor + 1) [
+    set pcolor yellow
+    set is-search-results-page? true
+  ]
+  ask patch (landing-page-xcor + 5) 51 [set plabel "results"]
+
+  ask patch landing-page-xcor (landing-page-ycor + 2) [
+    set pcolor green
+    set is-conversion-page? true
+  ]
+  ask patch (landing-page-xcor + 5) 52 [set plabel "conversion"]
+
+end
+
+to go
+  ask turtles[
+   ;;move-to 
+    
+  ]
+  
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
 649
 470
-16
-16
+-1
+-1
 13.0
 1
 10
@@ -16,15 +80,49 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+0
+32
+0
+32
 0
 0
 1
 ticks
 30.0
+
+BUTTON
+15
+25
+81
+58
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+85
+25
+148
+58
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -387,5 +485,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
