@@ -1,4 +1,6 @@
 to setup
+  clear-all
+  reset-ticks
   create-turtles 20
   ask turtles [
    set xcor random-xcor 
@@ -10,6 +12,7 @@ to go
   ask turtles [
    fd 1 
   ]
+  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW

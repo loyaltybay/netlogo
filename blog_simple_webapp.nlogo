@@ -2,71 +2,163 @@ breed [paid-users paid-user]
 breed [organic-users organic-user]
 breed [referral-users referral-user]
 
-
 globals[
- landing-page-xcor
- landing-page-ycor 
+  
+ paid-home
+ organic-home
+ referral-home
+ 
+ landing-page
+ results-page
+ conversion-page
+
+ landing-page-label
+ results-page-label
+ conversion-page-label
+
+ lost-users
+
+ revenue
+ marketing-cost
 ]
 
 patches-own [
+ is-home?
  is-landing-page?
- is-search-results-page?
+ is-results-page?
  is-conversion-page? 
 ]
 
-to setup
-  clear-all
-  set landing-page-xcor 10
-  set landing-page-ycor 50  
-  
-  create-paid-users 10 [
-   move-to patch-at 1 10 
+turtles-own [
+ signed-up? 
+ lost?
+]
+
+to init
+  ask turtles [
+   set heading 0 
+   set signed-up? false
+   set lost? false
   ]
+  
+  ask patches[
+   set is-home? false 
+   set is-landing-page? false
+   set is-results-page? false
+   set is-conversion-page? false
+  ]
+
+  set paid-home patch 1 10 
+  set organic-home patch 10 10
+  set referral-home patch 20 10
+  set lost-users patch 22 10
+    
+  set landing-page patch 10 50
+  set landing-page-label patch 15 50
+  
+  set results-page patch 10 51
+  set results-page-label patch 15 51
+  
+  set conversion-page patch 10 52
+  set conversion-page-label patch 15 52
+      
+  ask paid-home [set is-home? true]
+  ask organic-home [set is-home? true]
+  ask referral-home [set is-home? true]  
+
+end
+
+to setup
+
+  clear-all
+  init
+    
+  reset-ticks
+
+  create-paid-users n-paid-users [
+   set color 105
+   set shape "person"
+   move-to paid-home
+  ]
+  
   ask patch 1 11 [ set plabel "paid"]
   
-  create-organic-users 10 [
-   move-to patch-at 10 10 
+  create-organic-users n-organic-users [
+   set color 115   
+   set shape "person"
+   move-to organic-home
   ]  
   ask patch 10 11 [ set plabel "organic"]
   
   create-referral-users 10 [
-   move-to patch-at 20 10 
+   set color 125
+   set shape "person"
+   move-to referral-home
   ]
   ask patch 20 11 [ set plabel "referral"]
-  
-  ;;set up the webapps pages
-  ask patch landing-page-xcor landing-page-ycor [
-    set pcolor red
+
+  ;;set up the webapp pages
+  ask landing-page [
+    set pcolor 6
     set is-landing-page? true
   ]
-  ask patch (landing-page-xcor + 5) 50 [set plabel "landing"]
+  ask landing-page-label [set plabel "landing"]
   
-  ask patch landing-page-xcor (landing-page-ycor + 1) [
-    set pcolor yellow
-    set is-search-results-page? true
+  ask results-page [
+    set pcolor 7
+    set is-results-page? true
   ]
-  ask patch (landing-page-xcor + 5) 51 [set plabel "results"]
+  ask results-page-label [set plabel "results"]
 
-  ask patch landing-page-xcor (landing-page-ycor + 2) [
-    set pcolor green
+  ask conversion-page [
+    set pcolor 8
     set is-conversion-page? true
   ]
-  ask patch (landing-page-xcor + 5) 52 [set plabel "conversion"]
+  ask conversion-page-label [set plabel "conversion"]
 
 end
 
+to-report n-lost-users
+  report count (turtles with [lost? = true])
+end
+
 to go
+  
   ask turtles[
-   ;;move-to 
-    
+
+   if is-home? [
+     hatch 1
+     move-to landing-page
+     if is-paid-user? self [
+       set marketing-cost ( marketing-cost + cpc)
+     ]
+     
+     ifelse(random-float 1.0 < p-signup)
+     [
+       set signed-up? true
+       move-to results-page
+     ]
+     [
+       set lost? true
+       move-to lost-users
+     ]
+   ]
+      
+   if (is-results-page? and (random-float 1.0 < p-conversion)) [
+     move-to conversion-page
+     set revenue ( revenue + revenue-per-conversion)
+   ]
+
   ]
+  
+  tick
   
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+705
 10
-649
+1144
 470
 -1
 -1
@@ -123,6 +215,150 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+20
+80
+192
+113
+cpc
+cpc
+0
+10
+1
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+20
+115
+192
+148
+p-signup
+p-signup
+0
+1
+0.2
+0.05
+1
+NIL
+HORIZONTAL
+
+SLIDER
+20
+150
+192
+183
+p-search
+p-search
+0
+1
+0.5
+0.05
+1
+NIL
+HORIZONTAL
+
+SLIDER
+20
+185
+192
+218
+p-conversion
+p-conversion
+0
+1
+0.1
+0.05
+1
+NIL
+HORIZONTAL
+
+PLOT
+20
+355
+305
+505
+profit loss
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"marketing" 1.0 0 -16777216 true "" "plot marketing-cost"
+"revenue" 1.0 0 -7500403 true "" "plot revenue"
+"pl" 1.0 0 -2674135 true "" "plot revenue - marketing-cost"
+
+PLOT
+315
+355
+580
+505
+lost users
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"lost" 1.0 0 -16777216 true "" "plot count turtles with [lost? = true]"
+"signed up" 1.0 0 -7500403 true "" "plot count turtles with [signed-up? = true]"
+
+SLIDER
+230
+80
+402
+113
+n-paid-users
+n-paid-users
+0
+100
+10
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+230
+115
+402
+148
+n-organic-users
+n-organic-users
+0
+100
+10
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+230
+155
+432
+188
+revenue-per-conversion
+revenue-per-conversion
+0
+50
+5
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
