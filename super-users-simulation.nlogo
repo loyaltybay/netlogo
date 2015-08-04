@@ -79,21 +79,26 @@ to setup-super-users-clustered-network
 
   ask turtles [set size 3]
   ; make the network look a little prettier
-;  repeat 10
-;  [
-;    layout-spring turtles links 0.3 (world-width / (sqrt number-of-nodes)) 1
-;  ]
+  repeat 10
+  [
+    layout-spring turtles links 0.3 (world-width / (sqrt number-of-nodes)) 1
+  ]
 end
 
 to go
-  let filename (word "nodes-" number-of-nodes "_avg-node-degree-" average-node-degree "_spread-chance-" virus-spread-chance "_n-steps" n-steps "_n-super-users-" n-super-users "_super-user-node-degree-" super-user-node-degree) 
-  if(ticks = 0)[movie-start (word filename ".mov.qt7")]
+  
+  if(ticks = 0 and record-movie?)[
+    let filename (word "nodes-" number-of-nodes "_avg-node-degree-" average-node-degree "_spread-chance-" virus-spread-chance "_n-steps" n-steps "_n-super-users-" n-super-users "_super-user-node-degree-" super-user-node-degree) 
+    movie-start (word filename ".mov.qt7")
+  ]
     
   
   spread-virus
-  movie-grab-view
+  if record-movie? [movie-grab-view]
+  
   if (ticks > n-steps)[
-    movie-close
+    if record-movie? [movie-close]
+
     stop
   ]
 
@@ -271,7 +276,7 @@ super-user-node-degree
 super-user-node-degree
 0
 50
-12
+1
 1
 1
 NIL
@@ -291,6 +296,17 @@ n-steps
 1
 NIL
 HORIZONTAL
+
+SWITCH
+26
+321
+174
+354
+record-movie?
+record-movie?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
