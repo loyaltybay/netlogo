@@ -129,6 +129,7 @@ to go
    if is-home? [
      hatch 1
      move-to landing-page
+     
      if is-paid-user? self [
        set marketing-cost ( marketing-cost + cpc)
      ]
@@ -225,7 +226,7 @@ cpc
 cpc
 0
 10
-1
+1.5
 0.1
 1
 NIL
@@ -354,8 +355,8 @@ revenue-per-conversion
 revenue-per-conversion
 0
 50
-5
-1
+7
+0.1
 1
 NIL
 HORIZONTAL
