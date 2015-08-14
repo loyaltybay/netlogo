@@ -12,14 +12,15 @@ patches-own [
 to setup
   clear-all
 
-  set store-set (patch-set patch (min-pxcor / 2) (min-pycor / 2) patch (max-pxcor / 2) (max-pycor / 2))
+  ;set store-set (patch-set patch (min-pxcor / 2) (min-pycor / 2) patch (max-pxcor / 2) (max-pycor / 2))
+  set store-set n-of n-stores patches
   
   reset-ticks
   create-turtles n-people
 
   ask turtles [
    set shape "circle"
-   set size 0.2
+   set size 0.3
    set xcor random-xcor 
    set ycor random-ycor
   ]
@@ -55,7 +56,7 @@ to setup-stores
 end
 
 to move-turtle
-  ;fd 0.05
+
   ifelse store?
   [stop]
   [
@@ -76,14 +77,10 @@ to setup-store-scent
    ask patches [
      let current-store-scent store-scent
      let dist distancexy ([pxcor] of store-patch) ([pycor] of store-patch)
-     let new-store-scent max list 0 (16 - (dist ^ 2))
+     let new-store-scent max list 0 (16 - (dist * 2))
      ;show (list store-patch dist current-store-scent new-store-scent)
      set store-scent max (list 0 (current-store-scent + new-store-scent))
-     
-     ;if store-scent > 0[
-     ;  set plabel store-scent
-     ;  set plabel-color gray
-     ;] 
+
    ]
   ]
 
@@ -121,11 +118,11 @@ end
 GRAPHICS-WINDOW
 503
 16
-773
-307
-8
-8
-15.52
+994
+528
+20
+20
+12.0
 1
 7
 1
@@ -135,10 +132,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--8
-8
--8
-8
+-20
+20
+-20
+20
 1
 1
 1
@@ -188,8 +185,23 @@ n-people
 n-people
 10
 1000
-500
+810
 50
+1
+NIL
+HORIZONTAL
+
+SLIDER
+62
+251
+234
+284
+n-stores
+n-stores
+1
+3
+1
+1
 1
 NIL
 HORIZONTAL
