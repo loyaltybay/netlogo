@@ -163,7 +163,7 @@ virus-spread-chance
 virus-spread-chance
 0.0
 10.0
-2.5
+4
 0.1
 1
 %
@@ -231,8 +231,8 @@ number-of-nodes
 number-of-nodes
 10
 1000
-695
-5
+700
+10
 1
 NIL
 HORIZONTAL
@@ -276,7 +276,7 @@ super-user-node-degree
 super-user-node-degree
 0
 50
-1
+20
 1
 1
 NIL
@@ -291,7 +291,7 @@ n-steps
 n-steps
 100
 500
-100
+150
 10
 1
 NIL
@@ -304,7 +304,7 @@ SWITCH
 354
 record-movie?
 record-movie?
-1
+0
 1
 -1000
 
