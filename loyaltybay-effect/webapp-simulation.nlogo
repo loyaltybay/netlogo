@@ -6,9 +6,10 @@ patches-own [
  id
  store?
  store-cost-total
- store-income-total
+ store-revenue-total
  store-scent
  store-name
+ p-stickiness
 ]
 
 turtles-own [
@@ -22,7 +23,6 @@ to setup
   ;set store-set (patch-set patch (min-pxcor / 2) (min-pycor / 2) patch (max-pxcor / 2) (max-pycor / 2))
   set store-set n-of n-stores patches
 
-  
   reset-ticks
   create-turtles n-people
 
@@ -41,11 +41,23 @@ to go
    ]
    
    ask store-set [
+     let patch-color-id  7 * (id / count patches)
+
      set-current-plot "costs" 
-     set-current-plot-pen store-name
-     let patch-prop id / count patches
-     set-plot-pen-color scale-color red (patch-prop * 7) 0 8
+     set-current-plot-pen store-name     
+     set-plot-pen-color scale-color red patch-color-id 0 8
      plot store-cost-total
+     
+     set-current-plot "revenues" 
+     set-current-plot-pen store-name
+     set-plot-pen-color scale-color green patch-color-id 0 8
+     plot store-revenue-total
+
+     set-current-plot "profit vs loss" 
+     set-current-plot-pen store-name
+     set-plot-pen-color scale-color black patch-color-id 0 8
+     plot store-revenue-total - store-cost-total
+
    ]
    
    tick
@@ -62,10 +74,10 @@ to setup-users
 end
 
 to setup-patches
+  
   ask patches[
     set store? false
     set store-scent 0
-    set store-cost-total 0
   ]
 
   (foreach (sort patches) (n-values count patches [?]) [
@@ -78,30 +90,45 @@ to setup-stores
     set store? true
     set pcolor white
 
+    set store-cost-total 0
+    set p-stickiness random-normal 0.05 0.01
+    show p-stickiness
+
     set store-name word "patch" id
+    set-current-plot "costs"
+    create-temporary-plot-pen store-name
+    
+    set-current-plot "revenues"
+    create-temporary-plot-pen store-name
+    
+    set-current-plot "profit vs loss"
     create-temporary-plot-pen store-name
   ]
 end
 
 to move-turtle
 
-  ifelse store?
-  [
+  ifelse store? [
     
-    ifelse new-visitor?
-    [ 
+    ifelse new-visitor? [ 
       set store-cost-total (store-cost-total + avg-cpc)
       set new-visitor? false
     ]
-    
     [
- 
+      ifelse random-float 1.0 < p-stickiness
+      [
+        set color red
+        move-to one-of patches
+      ]
+      [
+        if ticks mod revenue-every-n-ticks = 0 [ set store-revenue-total store-revenue-total + revenue-amount]   
+      ]
+      
     ;do nothing for now but should decide whether to leave at this point
     ]
     
     
-   ]
-  [
+   ] [
     uphill-store-scent
     fd 0.04
     wiggle
@@ -252,9 +279,9 @@ HORIZONTAL
 
 PLOT
 20
-270
+205
 435
-420
+325
 costs
 NIL
 NIL
@@ -269,9 +296,9 @@ PENS
 
 SLIDER
 20
-165
+155
 192
-198
+188
 avg-cpc
 avg-cpc
 0.01
@@ -281,6 +308,70 @@ avg-cpc
 1
 NIL
 HORIZONTAL
+
+PLOT
+20
+330
+435
+450
+revenues
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+
+SLIDER
+205
+75
+397
+108
+revenue-every-n-ticks
+revenue-every-n-ticks
+1
+20
+10
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+210
+115
+382
+148
+revenue-amount
+revenue-amount
+0
+1
+0.2
+0.1
+1
+NIL
+HORIZONTAL
+
+PLOT
+20
+455
+435
+575
+profit vs loss
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
 
 @#$#@#$#@
 ## WHAT IS IT?
