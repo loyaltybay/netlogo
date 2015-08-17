@@ -3,9 +3,16 @@ globals[
 ]
 
 patches-own [
+ id
  store?
- store-number
+ store-cost-total
+ store-income-total
  store-scent
+ store-name
+]
+
+turtles-own [
+ new-visitor? 
 ]
 
 
@@ -14,54 +21,89 @@ to setup
 
   ;set store-set (patch-set patch (min-pxcor / 2) (min-pycor / 2) patch (max-pxcor / 2) (max-pycor / 2))
   set store-set n-of n-stores patches
+
   
   reset-ticks
   create-turtles n-people
 
-  ask turtles [
-   set shape "circle"
-   set size 0.3
-   set xcor random-xcor 
-   set ycor random-ycor
-  ]
-  
+  setup-users
   setup-patches
   setup-stores
   setup-store-scent
   ask patches[ color-patch]
 end
 
+
 to go
 
- ; repeat 5 [ ask turtles [ fd 0.02 ] display ]
    ask turtles [ 
      move-turtle
    ]
+   
+   ask store-set [
+     set-current-plot "costs" 
+     set-current-plot-pen store-name
+     let patch-prop id / count patches
+     set-plot-pen-color scale-color red (patch-prop * 7) 0 8
+     plot store-cost-total
+   ]
+   
    tick
+end
+
+to setup-users
+  ask turtles [
+   set shape "circle"
+   set new-visitor? true
+   set size 0.3
+   set xcor random-xcor 
+   set ycor random-ycor
+  ]
 end
 
 to setup-patches
   ask patches[
     set store? false
     set store-scent 0
+    set store-cost-total 0
   ]
+
+  (foreach (sort patches) (n-values count patches [?]) [
+    ask ?1 [ set id ?2 ]
+  ])
 end
 
 to setup-stores
   ask store-set [
-    set store-number 1
     set store? true
     set pcolor white
+
+    set store-name word "patch" id
+    create-temporary-plot-pen store-name
   ]
 end
 
 to move-turtle
 
   ifelse store?
-  [stop]
+  [
+    
+    ifelse new-visitor?
+    [ 
+      set store-cost-total (store-cost-total + avg-cpc)
+      set new-visitor? false
+    ]
+    
+    [
+ 
+    ;do nothing for now but should decide whether to leave at this point
+    ]
+    
+    
+   ]
   [
     uphill-store-scent
-    fd 0.05
+    fd 0.04
     wiggle
    ]
  
@@ -78,7 +120,7 @@ to setup-store-scent
      let current-store-scent store-scent
      let dist distancexy ([pxcor] of store-patch) ([pycor] of store-patch)
      let new-store-scent max list 0 (16 - (dist * 2))
-     ;show (list store-patch dist current-store-scent new-store-scent)
+
      set store-scent max (list 0 (current-store-scent + new-store-scent))
 
    ]
@@ -110,16 +152,18 @@ to-report store-scent-at-angle [angle]
 end
 
 to color-patch
-  
-  set pcolor scale-color green store-scent 0 50
-  if store? [set pcolor violet]
+  if store-scent > 0 [set pcolor 2]
+  set pcolor scale-color green store-scent 0 30
+
+
+  if store? [set pcolor green]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 503
 16
-994
-528
+1005
+539
 20
 20
 12.0
@@ -129,8 +173,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -20
 20
@@ -143,10 +187,10 @@ ticks
 30.0
 
 BUTTON
-11
-67
-77
-100
+20
+25
+86
+58
 NIL
 setup
 NIL
@@ -160,10 +204,10 @@ NIL
 1
 
 BUTTON
-8
-124
-71
-157
+100
+25
+163
+58
 NIL
 go
 T
@@ -177,10 +221,10 @@ NIL
 1
 
 SLIDER
-19
-189
-191
-222
+20
+75
+192
+108
 n-people
 n-people
 10
@@ -192,16 +236,48 @@ NIL
 HORIZONTAL
 
 SLIDER
-62
-251
-234
-284
+20
+115
+192
+148
 n-stores
 n-stores
 1
 3
+2
 1
 1
+NIL
+HORIZONTAL
+
+PLOT
+20
+270
+435
+420
+costs
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+
+SLIDER
+20
+165
+192
+198
+avg-cpc
+avg-cpc
+0.01
+0.2
+0.15
+0.01
 1
 NIL
 HORIZONTAL
@@ -567,5 +643,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
