@@ -5,14 +5,17 @@ globals[
 ]
 
 patches-own [
- id
+ store-id
+ store-name
+ store-plotting-color
  store?
+ give-reward?
  store-cost-total
  store-revenue-total
- total-signups
- total-leavers
+ store-extra-sales-count
+ store-cost-of-rewards-total
+ store-conversion-count
  store-scent
- store-name
 ]
 
 turtles-own [
@@ -33,43 +36,60 @@ to setup
   setup-users
   setup-patches
   setup-stores
+
   setup-users
   setup-store-scent
   ask patches[ color-patch]
+  setup-rewards
+  setup-store-pens
 end
 
 
 to go
-
+  if ticks <= 1
+  [
+   show [store-affinity-map] of one-of turtles 
+  ]
    ask turtles [ 
      move-turtle
    ]
    
    ask store-set [
-     let patch-color-id  7 * (id / count patches)
-     let sc-color scale-color red patch-color-id 0 8
      
+          
      set-current-plot "costs"
-     set-plot-pen-color sc-color
      set-current-plot-pen store-name     
+     set-plot-pen-color store-plotting-color
      plot store-cost-total
      
      set-current-plot "revenues" 
      set-current-plot-pen store-name
-     set-plot-pen-color sc-color
+     set-plot-pen-color store-plotting-color
      plot store-revenue-total
 
      set-current-plot "profit vs loss"
      set-current-plot-pen store-name
-     set-plot-pen-color sc-color
+     set-plot-pen-color store-plotting-color
      plot store-revenue-total - store-cost-total
      
-     set-current-plot "signups"
+     set-current-plot "extra sales"
      set-current-plot-pen store-name
-     set-plot-pen-color sc-color
-     plot total-signups
+     set-plot-pen-color store-plotting-color
+     plot store-extra-sales-count
 
-
+     set-current-plot "cost of rewards"
+     set-current-plot-pen store-name
+     set-plot-pen-color store-plotting-color
+     plot store-cost-of-rewards-total
+     
+     
+     set-current-plot "avg cost per conv"
+     set-current-plot-pen store-name
+     set-plot-pen-color store-plotting-color
+     
+     ifelse store-conversion-count > 0
+     [plot store-cost-total / store-conversion-count]
+     [plot 0]
    ]
    
    tick
@@ -84,10 +104,10 @@ to setup-users
    set xcor random-xcor 
    set ycor random-ycor
    ask store-set [
-    table:put [store-affinity-map] of myself id base-p-stickiness 
+    table:put [store-affinity-map] of myself store-id base-p-stickiness
    ]
    
-   ;show store-affinity-map
+
   ]
 end
 
@@ -95,24 +115,47 @@ to setup-patches
   
   ask patches[
     set store? false
+    
     set store-scent 0
+    set store-plotting-color one-of (list 5 15 25 35 45 55 65 75 85 95 105 112 125 135)
   ]
 
-  (foreach (sort patches) (n-values count patches [?]) [
-    ask ?1 [ set id ?2 ]
+  (foreach (sort store-set) (n-values count store-set[?]) [
+    ask ?1 [ set store-id ?2 + 1 ]
   ])
 end
 
 to setup-stores
   ask store-set [
     set store? true
+    set give-reward? false
     set pcolor white
 
     set store-cost-total 0
-    set total-signups 0
+    set store-extra-sales-count 0
+    set store-conversion-count 0
 
-    set store-name word "patch" id
-    
+    set store-name word "store" store-id
+       
+  ]
+end
+
+to setup-rewards
+  let rewarding-store one-of store-set
+  ask rewarding-store[
+    set pcolor violet 
+    set give-reward? true
+    set store-name word store-name " reward"
+  ]
+  
+   ask turtles [
+     table:put store-affinity-map [store-id] of rewarding-store reward-stickiness-increment
+   ]
+  
+end
+
+to setup-store-pens
+  ask store-set[
     set-current-plot "costs"
     create-temporary-plot-pen store-name
     
@@ -121,10 +164,17 @@ to setup-stores
     
     set-current-plot "profit vs loss"
     create-temporary-plot-pen store-name
-    
-    set-current-plot "signups"
+
+
+    set-current-plot "extra sales"
     create-temporary-plot-pen store-name
 
+    set-current-plot "avg cost per conv"
+    create-temporary-plot-pen store-name
+
+    set-current-plot "cost of rewards"
+    create-temporary-plot-pen store-name
+ 
   ]
 end
 
@@ -135,10 +185,17 @@ to move-turtle
       set  store-cost-total  store-cost-total + avg-cpc
       ifelse random-float 1.0 < signup-rate
       [
-        set total-signups total-signups + 1        
+
         set new-visitor? false
         
-        if random-float 1.0 < conversion-rate [set store-revenue-total store-revenue-total + avg-basket-value]
+        if random-float 1.0 < conversion-rate [
+          set store-conversion-count  store-conversion-count + 1
+          set store-revenue-total store-revenue-total + avg-basket-value
+          if give-reward? [ 
+            set store-cost-total store-cost-total + reward-cost
+            set store-cost-of-rewards-total store-cost-of-rewards-total + reward-cost  
+          ]
+        ]
         
       ]
       [
@@ -147,26 +204,21 @@ to move-turtle
   
     ]
     [
-      let local-stickiness table:get store-affinity-map [id] of patch-here
-      ifelse random-float 1.0 < local-stickiness
+      let local-stickiness table:get store-affinity-map [store-id] of patch-here
+      if random-float 1.0 < local-stickiness
       [
-        set total-leavers total-leavers + 1
-        leave-store
-      ]
-      [
-       ;if ticks mod revenue-every-n-ticks = 0 [ set store-revenue-total store-revenue-total + revenue-amount]   
-       ;purchase again
+
        set store-revenue-total store-revenue-total + avg-basket-value
-       leave-store
+       set store-extra-sales-count store-extra-sales-count + 1
+       
       ]
-      
-    
+      leave-store
+
     ]
-    
     
    ] [
     uphill-store-scent
-    fd 0.04
+    fd 0.2
     wiggle
    ]
  
@@ -194,9 +246,7 @@ to setup-store-scent
 
    ]
   ]
-
 end
-
 
 to uphill-store-scent  ;; turtle procedure
   let scent-ahead store-scent-at-angle   0
@@ -227,10 +277,10 @@ to color-patch
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-934
-13
-1436
-536
+997
+12
+1499
+535
 20
 20
 12.0
@@ -240,8 +290,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-0
-0
+1
+1
 1
 -20
 20
@@ -311,17 +361,17 @@ n-stores
 n-stores
 1
 3
-1
+2
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-20
-205
-435
-325
+403
+15
+711
+135
 costs
 NIL
 NIL
@@ -350,10 +400,10 @@ NIL
 HORIZONTAL
 
 PLOT
-20
-330
-435
-450
+403
+139
+712
+259
 revenues
 NIL
 NIL
@@ -367,10 +417,10 @@ true
 PENS
 
 PLOT
-20
-455
-435
-575
+403
+265
+712
+385
 profit vs loss
 NIL
 NIL
@@ -384,36 +434,19 @@ true
 PENS
 
 SLIDER
-652
-158
-825
-191
+16
+294
+189
+327
 base-p-stickiness
 base-p-stickiness
 0
 0.2
-0.02
+0
 0.01
 1
 NIL
 HORIZONTAL
-
-PLOT
-20
-577
-432
-697
-signups
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
 
 SLIDER
 215
@@ -459,6 +492,87 @@ avg-basket-value
 1
 NIL
 HORIZONTAL
+
+PLOT
+403
+386
+711
+506
+avg cost per conv
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+
+SLIDER
+16
+337
+246
+371
+reward-stickiness-increment
+reward-stickiness-increment
+0
+0.1
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+723
+15
+987
+135
+extra sales
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+
+SLIDER
+14
+245
+187
+279
+reward-cost
+reward-cost
+1
+100
+10
+5
+1
+NIL
+HORIZONTAL
+
+PLOT
+722
+140
+995
+260
+cost of rewards
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
 
 @#$#@#$#@
 ## WHAT IS IT?
