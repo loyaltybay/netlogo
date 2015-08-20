@@ -1,501 +1,108 @@
 extensions [table]
 
-globals[
-  store-set
-]
+globals [t]
 
-patches-own [
- id
- store?
- store-cost-total
- store-revenue-total
- total-signups
- total-leavers
- store-scent
- store-name
-]
-
-turtles-own [
- new-visitor? 
- store-affinity-map
-]
-
-
-to setup
+to test1
   clear-all
 
-  ;set store-set (patch-set patch (min-pxcor / 2) (min-pycor / 2) patch (max-pxcor / 2) (max-pycor / 2))
-  set store-set n-of n-stores patches
+  ;; create the table
+  set t table:make
 
-  reset-ticks
-  create-turtles n-people
+  ;; table:put <table> <key> <value>
+  ;; associate <value> with <key> in the table
+  table:put t 0 "test-value"
+  table:put t "test-key" 1
 
-  setup-users
-  setup-patches
-  setup-stores
-  setup-users
-  setup-store-scent
-  ask patches[ color-patch]
-end
+  ;; table:get <table> <key>
+  ;; reports the value in the table associated with <key>
+  ;; if there is no value set for the key, returns 0
+  if table:get t 0 != "test-value" [ user-message "should be \"test-value\"" ]
+  if table:get t "test-key" != 1 [ user-message "should be 1" ]
 
+  ;; table:keys <table>
+  ;; reports all keys in the table as a list
+  output-print table:keys t
 
-to go
+  ;; table:length <table>
+  ;; reports the number of key->value pairs in the table
+  output-print table:length t
 
-   ask turtles [ 
-     move-turtle
-   ]
-   
-   ask store-set [
-     let patch-color-id  7 * (id / count patches)
-     let sc-color scale-color red patch-color-id 0 8
-     
-     set-current-plot "costs"
-     set-plot-pen-color sc-color
-     set-current-plot-pen store-name     
-     plot store-cost-total
-     
-     set-current-plot "revenues" 
-     set-current-plot-pen store-name
-     set-plot-pen-color sc-color
-     plot store-revenue-total
+  ;; table:has-key? <table> <key>
+  ;; reports true if there is a value associated with the key in the table
+  if ( not table:has-key? t 0 ) [ user-message "should contain 0" ]
+  if ( not table:has-key? t "test-key" ) [ user-message "should contain test-key" ]
+  if ( table:has-key? t "arbitrary" ) [user-message "should not have the arbitrary key" ]
 
-     set-current-plot "profit vs loss"
-     set-current-plot-pen store-name
-     set-plot-pen-color sc-color
-     plot store-revenue-total - store-cost-total
-     
-     set-current-plot "signups"
-     set-current-plot-pen store-name
-     set-plot-pen-color sc-color
-     plot total-signups
+  ;; you can print a table
+  output-print t
 
-
-   ]
-   
-   tick
-end
-
-to setup-users
-  ask turtles [
-   set store-affinity-map table:make
-   set shape "circle"
-   set new-visitor? true
-   set size 0.3
-   set xcor random-xcor 
-   set ycor random-ycor
-   ask store-set [
-    table:put [store-affinity-map] of myself id base-p-stickiness 
-   ]
-   
-   ;show store-affinity-map
-  ]
-end
-
-to setup-patches
-  
-  ask patches[
-    set store? false
-    set store-scent 0
-  ]
-
-  (foreach (sort patches) (n-values count patches [?]) [
-    ask ?1 [ set id ?2 ]
-  ])
-end
-
-to setup-stores
-  ask store-set [
-    set store? true
-    set pcolor white
-
-    set store-cost-total 0
-    set total-signups 0
-
-    set store-name word "patch" id
-    
-    set-current-plot "costs"
-    create-temporary-plot-pen store-name
-    
-    set-current-plot "revenues"
-    create-temporary-plot-pen store-name
-    
-    set-current-plot "profit vs loss"
-    create-temporary-plot-pen store-name
-    
-    set-current-plot "signups"
-    create-temporary-plot-pen store-name
-
-  ]
-end
-
-to move-turtle
-
-  ifelse store? [
-    ifelse new-visitor? [ 
-      set  store-cost-total  store-cost-total + avg-cpc
-      ifelse random-float 1.0 < signup-rate
-      [
-        set total-signups total-signups + 1        
-        set new-visitor? false
-        
-        if random-float 1.0 < conversion-rate [set store-revenue-total store-revenue-total + avg-basket-value]
-        
-      ]
-      [
-        leave-store
-      ]
-  
-    ]
-    [
-      let local-stickiness table:get store-affinity-map [id] of patch-here
-      ifelse random-float 1.0 < local-stickiness
-      [
-        set total-leavers total-leavers + 1
-        leave-store
-      ]
-      [
-       ;if ticks mod revenue-every-n-ticks = 0 [ set store-revenue-total store-revenue-total + revenue-amount]   
-       ;purchase again
-       set store-revenue-total store-revenue-total + avg-basket-value
-       leave-store
-      ]
-      
-    
-    ]
-    
-    
-   ] [
-    uphill-store-scent
-    fd 0.04
-    wiggle
-   ]
- 
-end
-
-
-to leave-store
-  set new-visitor? true
-  move-to one-of patches
-end
-
-
-to setup-store-scent
-  let store-list [ self ] of store-set ;
-  foreach store-list [
-
-   let store-patch ?
-   
-   ask patches [
-     let current-store-scent store-scent
-     let dist distancexy ([pxcor] of store-patch) ([pycor] of store-patch)
-     let new-store-scent max list 0 (16 - (dist * 2))
-
-     set store-scent max (list 0 (current-store-scent + new-store-scent))
-
-   ]
-  ]
+  ;; table:clear <table>
+  ;; clears all key->value associations in the table
+  table:clear t
+  if table:length t != 0 [ user-message "should have no entries" ]
 
 end
 
 
-to uphill-store-scent  ;; turtle procedure
-  let scent-ahead store-scent-at-angle   0
-  let scent-right store-scent-at-angle  45
-  let scent-left  store-scent-at-angle -45
-  if (scent-right > scent-ahead) or (scent-left > scent-ahead)
-  [ ifelse scent-right > scent-left
-    [ rt 45 ]
-    [ lt 45 ] ]
-end
-
-to wiggle  ;; turtle procedure
-  rt random 40
-  lt random 40
-  if not can-move? 1 [ rt 180 ]
-end
-
-to-report store-scent-at-angle [angle]
-  let p patch-right-and-ahead angle 1
-  if p = nobody [ report 0 ]
-  report [store-scent] of p
-end
-
-to color-patch
-  if store-scent > 0 [set pcolor 2]
-  set pcolor scale-color green store-scent 0 30
-  if store? [set pcolor green]
-end
+; Public Domain:
+; To the extent possible under law, Uri Wilensky has waived all
+; copyright and related or neighboring rights to this model.
 @#$#@#$#@
 GRAPHICS-WINDOW
-934
-13
-1436
-536
-20
-20
-12.0
+265
+10
+704
+54
+16
+0
+13.0
 1
-7
+10
 1
 1
 1
 0
+1
+1
+1
+-16
+16
 0
 0
-1
--20
-20
--20
-20
-1
-1
+0
+0
 1
 ticks
 30.0
 
 BUTTON
-20
-25
-86
-58
-NIL
-setup
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-100
-25
-163
-58
-NIL
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-20
-75
-192
-108
-n-people
-n-people
-10
-1000
-460
-50
-1
-NIL
-HORIZONTAL
-
-SLIDER
-20
-115
-192
-148
-n-stores
-n-stores
-1
-3
-1
-1
-1
-NIL
-HORIZONTAL
-
-PLOT
-20
-205
-435
-325
-costs
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-
-SLIDER
-20
-155
-192
-188
-avg-cpc
-avg-cpc
-0.01
-0.2
-0.15
-0.01
-1
-NIL
-HORIZONTAL
-
-PLOT
-20
-330
-435
-450
-revenues
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-
-PLOT
-20
-455
-435
-575
-profit vs loss
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-
-SLIDER
-652
-158
-825
-191
-base-p-stickiness
-base-p-stickiness
-0
-0.2
-0.02
-0.01
-1
-NIL
-HORIZONTAL
-
-PLOT
-20
-577
-432
-697
-signups
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-
-SLIDER
-215
 85
-387
-118
-signup-rate
-signup-rate
-0.01
-0.2
-0.05
-0.01
-1
+42
+148
+75
 NIL
-HORIZONTAL
+test1
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
-SLIDER
-215
-120
-387
-153
-conversion-rate
-conversion-rate
-0
-1.0
-0.5
-0.05
-1
-NIL
-HORIZONTAL
-
-SLIDER
-215
-160
-387
-193
-avg-basket-value
-avg-basket-value
-0
-100
-50
-1
-1
-NIL
-HORIZONTAL
+OUTPUT
+7
+86
+479
+406
+12
 
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
-
-## HOW IT WORKS
-
-(what rules the agents use to create the overall behavior of the model)
-
-## HOW TO USE IT
-
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+This model demonstrates basic usage of the table extension.
 @#$#@#$#@
 default
 true
@@ -689,22 +296,6 @@ Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
 
-sheep
-false
-15
-Circle -1 true true 203 65 88
-Circle -1 true true 70 65 162
-Circle -1 true true 150 105 120
-Polygon -7500403 true false 218 120 240 165 255 165 278 120
-Circle -7500403 true false 214 72 67
-Rectangle -1 true true 164 223 179 298
-Polygon -1 true true 45 285 30 285 30 240 15 195 45 210
-Circle -1 true true 3 83 150
-Rectangle -1 true true 65 221 80 296
-Polygon -1 true true 195 285 210 285 210 240 240 210 195 210
-Polygon -7500403 true false 276 85 285 105 302 99 294 83
-Polygon -7500403 true false 219 85 210 105 193 99 201 83
-
 square
 false
 0
@@ -789,13 +380,6 @@ Line -7500403 true 40 84 269 221
 Line -7500403 true 40 216 269 79
 Line -7500403 true 84 40 221 269
 
-wolf
-false
-0
-Polygon -16777216 true false 253 133 245 131 245 133
-Polygon -7500403 true true 2 194 13 197 30 191 38 193 38 205 20 226 20 257 27 265 38 266 40 260 31 253 31 230 60 206 68 198 75 209 66 228 65 243 82 261 84 268 100 267 103 261 77 239 79 231 100 207 98 196 119 201 143 202 160 195 166 210 172 213 173 238 167 251 160 248 154 265 169 264 178 247 186 240 198 260 200 271 217 271 219 262 207 258 195 230 192 198 210 184 227 164 242 144 259 145 284 151 277 141 293 140 299 134 297 127 273 119 270 105
-Polygon -7500403 true true -1 195 14 180 36 166 40 153 53 140 82 131 134 133 159 126 188 115 227 108 236 102 238 98 268 86 269 92 281 87 269 103 269 113
-
 x
 false
 0
@@ -805,6 +389,7 @@ Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
 NetLogo 5.2.0
 @#$#@#$#@
+need-to-manually-make-preview-for-this-model
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -817,9 +402,9 @@ default
 link direction
 true
 0
-Line -7500403 true 150 150 90 180
-Line -7500403 true 150 150 210 180
+Line -7500403 true 150 150 30 225
+Line -7500403 true 150 150 270 225
 
 @#$#@#$#@
-1
+0
 @#$#@#$#@
