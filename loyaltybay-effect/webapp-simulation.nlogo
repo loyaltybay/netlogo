@@ -391,10 +391,10 @@ SLIDER
 188
 avg-cpc
 avg-cpc
-0.01
-0.2
-0.15
-0.01
+0
+2
+1
+0.1
 1
 NIL
 HORIZONTAL
@@ -457,7 +457,7 @@ signup-rate
 signup-rate
 0.01
 0.2
-0.05
+0.02
 0.01
 1
 NIL
@@ -472,7 +472,7 @@ conversion-rate
 conversion-rate
 0
 1.0
-0.5
+0.3
 0.05
 1
 NIL
@@ -519,7 +519,7 @@ reward-stickiness-increment
 reward-stickiness-increment
 0
 0.1
-0.1
+0.05
 0.01
 1
 NIL

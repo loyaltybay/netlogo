@@ -1,6 +1,6 @@
 turtles-own
 [
-  infected?           ;; if true, the turtle is infectious
+  heard-message?           ;; if true, the turtle is infectious
 ]
 
 breed [super-users super-user]
@@ -10,7 +10,6 @@ to setup
   
   setup-nodes
   setup-super-users-clustered-network
-  ;ask one-of turtles [become-infected]   ask links [ set color gray - 3 ]
   reset-ticks
 end
 
@@ -23,19 +22,19 @@ to setup-nodes
   [
     ; for visual reasons, we don't put any nodes *too* close to the edges
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
-    set size 1
+    set size 0.7
     become-susceptible
 
   ]
 end
 
-to-report percent-infected
-  report count turtles with [infected?] / count turtles * 100
+to-report percent-heard-message
+  report count turtles with [heard-message?] / count turtles * 100
 end
 
 
-to-report percent-uninfected
-  report count turtles with [not infected?] / count turtles * 100
+to-report percent-not-heard-message
+  report count turtles with [not heard-message?] / count turtles * 100
 end
 
 
@@ -60,13 +59,16 @@ to setup-super-users-clustered-network
     set color white
     setxy random-xcor random-ycor
     
-;     ask (min-n-of super-user-node-degree (other turtles with [not link-neighbor? myself])
-;                   [distance myself]) [
+      let choice (min-n-of super-user-node-degree (other turtles with [not link-neighbor? myself]) [distance myself])
+      ask choice [
+        create-link-with myself 
+      ]
 
-    ask (n-of super-user-node-degree (other turtles with [not link-neighbor? myself])) [
-        create-link-with myself
-        set color yellow
-    ]
+
+    ;ask (n-of super-user-node-degree (other turtles with [not link-neighbor? myself])) [
+    ;    create-link-with myself
+    ;    set color yellow
+    ;]
   ]
   
   ifelse(n-super-users > 0)
@@ -88,17 +90,17 @@ end
 to go
   
   if(ticks = 0 and record-movie?)[
-    let filename (word "nodes-" number-of-nodes "_avg-node-degree-" average-node-degree "_spread-chance-" virus-spread-chance "_n-steps" n-steps "_n-super-users-" n-super-users "_super-user-node-degree-" super-user-node-degree) 
-    movie-start (word filename ".mov.qt7")
+    let filename (word "nodes-" number-of-nodes "_avg-node-degree-" average-node-degree "_spread-chance-" message-spread-chance "_n-steps" n-steps "_n-super-users-" n-super-users "_super-user-node-degree-" super-user-node-degree) 
+    ;movie-start (word filename ".mov.qt7")
   ]
     
   
   spread-virus
-  if record-movie? [movie-grab-view]
+;  if record-movie? [movie-grab-view]
+  
   
   if (ticks > n-steps)[
-    if record-movie? [movie-close]
-
+    ;if record-movie? [movie-close]
     stop
   ]
 
@@ -106,20 +108,20 @@ to go
 end
 
 to become-infected  ;; turtle procedure
-  set infected? true
+  set heard-message? true
   set color red
 end
 
 to become-susceptible  ;; turtle procedure
-  set infected? false
+  set heard-message? false
   set color green - 2
 end
 
 
 to spread-virus
-  ask turtles with [infected?]
+  ask turtles with [heard-message?]
     [ ask link-neighbors
-        [ if random-float 100 < virus-spread-chance
+        [ if random-float 1 < message-spread-chance
             [ become-infected ] ] ]
 end
 
@@ -130,8 +132,8 @@ end
 GRAPHICS-WINDOW
 265
 10
-1052
-678
+1053
+677
 55
 45
 7.0
@@ -157,14 +159,14 @@ ticks
 SLIDER
 23
 88
-228
-121
-virus-spread-chance
-virus-spread-chance
+247
+122
+message-spread-chance
+message-spread-chance
 0.0
-10.0
-4
-0.1
+1
+0.05
+0.05
 1
 %
 HORIZONTAL
@@ -219,8 +221,8 @@ true
 true
 "" ""
 PENS
-"susceptible" 1.0 0 -10899396 true "" "plot percent-infected"
-"infected" 1.0 0 -2674135 true "" "plot percent-uninfected"
+"heard-message" 1.0 0 -10899396 true "" "plot percent-heard-message"
+"not-heard-message" 1.0 0 -2674135 true "" "plot percent-not-heard-message"
 
 SLIDER
 25
@@ -276,7 +278,7 @@ super-user-node-degree
 super-user-node-degree
 0
 50
-20
+6
 1
 1
 NIL
@@ -291,7 +293,7 @@ n-steps
 n-steps
 100
 500
-150
+300
 10
 1
 NIL
@@ -676,23 +678,25 @@ NetLogo 5.2.0
   <experiment name="experiment" repetitions="20" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <metric>percent-infected</metric>
+    <metric>percent-heard-message</metric>
     <enumeratedValueSet variable="super-user-node-degree">
-      <value value="15"/>
+      <value value="6"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="virus-spread-chance">
-      <value value="5"/>
+    <enumeratedValueSet variable="message-spread-chance">
+      <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-nodes">
-      <value value="1000"/>
+      <value value="700"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-super-users">
       <value value="0"/>
       <value value="1"/>
-      <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="average-node-degree">
       <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-steps">
+      <value value="300"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
