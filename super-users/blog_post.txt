@@ -6,6 +6,12 @@ I love Netlogo. Even since I discovered it a few years ago I keep coming back to
 
 These example just scratch the surface, and if you install Netlogo there is a large library of examples which illustrate what can be achieved.
 
-Although it's fun to build such things and watch them run (die, little minions!), the real power of Netlogo is in its ability to generate data for further analysis. Any running Netlogo model can produce live charts of any variable within the program, but you can also output time series data for any variable to a text file.
+Although it's fun to build such things and watch them run (die, little minions!), the real power of Netlogo is in its ability to generate data for further analysis. Any running Netlogo model can produce live charts of any variable within the program, but you can also output time series data for any variable to a text file. We can get data about lots of repetitions for a particular model using different starting parameters - this allows us to do higher level analysis to figure out how the simulation performs under different conditions.
+
+example
+
+One of the most interesting models that comes packaged with Netlogo is called Ants
+
+
 
 

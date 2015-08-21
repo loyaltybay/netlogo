@@ -99,7 +99,7 @@ to go
 ;  if record-movie? [movie-grab-view]
   
   
-  if (ticks > n-steps)[
+  if (ticks > n-steps or all? turtles [heard-message?])[
     ;if record-movie? [movie-close]
     stop
   ]
@@ -132,8 +132,8 @@ end
 GRAPHICS-WINDOW
 265
 10
-1053
-677
+1052
+678
 55
 45
 7.0
@@ -160,7 +160,7 @@ SLIDER
 23
 88
 247
-122
+121
 message-spread-chance
 message-spread-chance
 0.0
@@ -168,7 +168,7 @@ message-spread-chance
 0.05
 0.05
 1
-%
+NIL
 HORIZONTAL
 
 BUTTON
@@ -233,7 +233,7 @@ number-of-nodes
 number-of-nodes
 10
 1000
-700
+500
 10
 1
 NIL
@@ -248,7 +248,7 @@ average-node-degree
 average-node-degree
 1
 10
-5
+6
 1
 1
 NIL
@@ -263,7 +263,7 @@ n-super-users
 n-super-users
 0
 20
-1
+10
 1
 1
 NIL
@@ -277,8 +277,8 @@ SLIDER
 super-user-node-degree
 super-user-node-degree
 0
-50
-6
+20
+20
 1
 1
 NIL
@@ -293,7 +293,7 @@ n-steps
 n-steps
 100
 500
-300
+500
 10
 1
 NIL
@@ -675,28 +675,33 @@ NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment" repetitions="20" runMetricsEveryStep="true">
+  <experiment name="experiment" repetitions="5" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <metric>percent-heard-message</metric>
     <enumeratedValueSet variable="super-user-node-degree">
-      <value value="6"/>
+      <value value="10"/>
+      <value value="15"/>
+      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="message-spread-chance">
       <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-nodes">
-      <value value="700"/>
+      <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-super-users">
       <value value="0"/>
       <value value="1"/>
+      <value value="10"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="average-node-degree">
       <value value="5"/>
+      <value value="6"/>
+      <value value="7"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-steps">
-      <value value="300"/>
+      <value value="500"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
