@@ -174,7 +174,7 @@ HORIZONTAL
 BUTTON
 25
 125
-120
+80
 165
 NIL
 setup
@@ -189,9 +189,9 @@ NIL
 1
 
 BUTTON
-135
+170
 125
-230
+225
 165
 NIL
 go
@@ -248,7 +248,7 @@ average-node-degree
 average-node-degree
 1
 10
-6
+5
 1
 1
 NIL
@@ -263,7 +263,7 @@ n-super-users
 n-super-users
 0
 20
-10
+0
 1
 1
 NIL
@@ -278,7 +278,7 @@ super-user-node-degree
 super-user-node-degree
 0
 20
-20
+16
 1
 1
 NIL
@@ -293,7 +293,7 @@ n-steps
 n-steps
 100
 500
-500
+750
 10
 1
 NIL
@@ -309,6 +309,23 @@ record-movie?
 0
 1
 -1000
+
+BUTTON
+85
+125
+162
+165
+go once
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -675,20 +692,20 @@ NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment" repetitions="5" runMetricsEveryStep="true">
+  <experiment name="experiment" repetitions="3" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <metric>percent-heard-message</metric>
     <enumeratedValueSet variable="super-user-node-degree">
       <value value="10"/>
-      <value value="15"/>
-      <value value="20"/>
+      <value value="13"/>
+      <value value="16"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="message-spread-chance">
       <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="number-of-nodes">
-      <value value="500"/>
+      <value value="750"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-super-users">
       <value value="0"/>
@@ -696,12 +713,12 @@ NetLogo 5.2.0
       <value value="10"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="average-node-degree">
-      <value value="5"/>
+      <value value="3"/>
       <value value="6"/>
-      <value value="7"/>
+      <value value="9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-steps">
-      <value value="500"/>
+      <value value="750"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
@@ -719,5 +736,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@

@@ -514,7 +514,7 @@ SLIDER
 16
 337
 246
-371
+370
 reward-stickiness-increment
 reward-stickiness-increment
 0
@@ -546,7 +546,7 @@ SLIDER
 14
 245
 187
-279
+278
 reward-cost
 reward-cost
 1
